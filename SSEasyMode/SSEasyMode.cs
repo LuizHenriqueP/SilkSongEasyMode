@@ -1,5 +1,6 @@
 ﻿using BepInEx;
 using BepInEx.Logging;
+using BepInEx.Configuration;
 using GlobalSettings;
 using HarmonyLib;
 using System;
@@ -19,11 +20,15 @@ public class SSEasyMode : BaseUnityPlugin
     static float damageTakenReduction = 0.5f; // % of damage received (1.0 - 100%, 0.5 - 50%)
 
     static float damageTakenTracker = 0f;
+    public static ConfigEntry<bool> EnableHalfDamageTaken;
+    public static ConfigEntry<bool> EnablePlayerDoubleDamage;
 
     private void Awake()
     {
         Logger = base.Logger;
         Logger.LogInfo("Plugin loaded and initialized.");
+        EnableHalfDamageTaken = Config.Bind("General", "EnableHalfDamageTaken", true, "Enable or disable half damage taken for player.");
+        EnablePlayerDoubleDamage = Config.Bind("General", "EnablePlayerDoubleDamage", true, "Enable or disable double damage done by the player.");
 
         Harmony.CreateAndPatchAll(typeof(SSEasyMode), null);
     }
@@ -33,7 +38,7 @@ public class SSEasyMode : BaseUnityPlugin
     [HarmonyPatch(typeof(HealthManager), "TakeDamage")]
     private static void TakeDamagePrefix(HealthManager __instance, ref HitInstance hitInstance)
     {
-
+        if (!EnablePlayerDoubleDamage.Value) return;
         if (!hitInstance.IsHeroDamage) return;
 
         Logger.LogInfo("MULTIPLYING PLAYER DAMAGE BY x" + damageDealtMultiplier);
@@ -43,6 +48,12 @@ public class SSEasyMode : BaseUnityPlugin
     [HarmonyPatch(typeof(PlayerData), "TakeHealth")]
     private static bool TakeHealthPrefix(PlayerData __instance, int amount, bool hasBlueHealth, bool allowFracturedMaskBreak)
     {
+        if (!EnableHalfDamageTaken.Value)
+        {
+            __instance.TakeHealth(amount, hasBlueHealth, allowFracturedMaskBreak);
+            return false;
+        }
+            
         Logger.LogInfo("Amount: " + amount);
         Logger.LogInfo("damageTakenTracker: " + SSEasyMode.damageTakenTracker);
         SSEasyMode.damageTakenTracker += amount * damageTakenReduction;
