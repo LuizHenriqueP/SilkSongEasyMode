@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 
-[BepInPlugin("com.NoBrainer.SSEasyMode", "SSEasyMode", "1.0.0")]
+[BepInPlugin("com.NoBrainer.SSEasyMode", "SSEasyMode", "1.1.0")]
 public class SSEasyMode : BaseUnityPlugin
 {
     internal new static ManualLogSource Logger;
@@ -49,9 +49,8 @@ public class SSEasyMode : BaseUnityPlugin
     private static bool TakeHealthPrefix(PlayerData __instance, int amount, bool hasBlueHealth, bool allowFracturedMaskBreak)
     {
         if (!EnableHalfDamageTaken.Value)
-        {
-            __instance.TakeHealth(amount, hasBlueHealth, allowFracturedMaskBreak);
-            return false;
+        {   
+            return true;
         }
             
         Logger.LogInfo("Amount: " + amount);
